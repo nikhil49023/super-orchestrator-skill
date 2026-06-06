@@ -5,7 +5,7 @@ An advanced orchestration skill for the [Google Antigravity](https://antigravity
 ## ✨ What's New (v2.0)
 
 - **🆓 Free Model Routing** — Lightweight tasks (graph builds, web searches, simple edits) are now delegated to free opencode models (`nemotron-3-ultra-free`, `deepseek-v4-flash-free`, `mimo-v2.5-free`), saving real money on routine operations.
-- **🔒 Safelock Protocol** — When opencode workers are used, the orchestrator acts as a pre-flight gatekeeper, classifying tasks by risk before running. High-risk ops are blocked and handled directly. Low/medium tasks auto-approve with `--yolo` to prevent interactive permission deadlocks.
+- **🔒 Safelock Protocol** — When opencode workers are used, the orchestrator acts as a pre-flight gatekeeper, classifying tasks by risk before running. High-risk ops are blocked and handled directly. Low/medium tasks run directly with `--yolo` to prevent interactive permission deadlocks.
 - **🕷️ Auto-Setup** — A `setup.sh` script auto-installs all dependencies (Firecrawl Docker stack, code-review-graph, opencode) if they're missing on first run.
 - **📊 Routing Matrix** — Clear task-to-worker decision table: graph MCP for architecture, Firecrawl for research, free opencode models for code tasks, `self` subagents for complex multi-file work.
 
@@ -42,15 +42,15 @@ An advanced orchestration skill for the [Google Antigravity](https://antigravity
 ### 1. Install the skill
 
 ```bash
-mkdir -p ~/.gemini/skills
-cd ~/.gemini/skills
+mkdir -p $HOME/.gemini/skills
+cd $HOME/.gemini/skills
 git clone https://github.com/nikhil49023/super-orchestrator-skill.git super-orchestrator
 ```
 
 ### 2. Run setup (auto-installs all dependencies)
 
 ```bash
-bash ~/.gemini/skills/super-orchestrator/scripts/setup.sh
+bash $HOME/.gemini/skills/super-orchestrator/scripts/setup.sh
 ```
 
 The setup script will:
@@ -100,7 +100,7 @@ A known failure mode of opencode in automated contexts is **interactive permissi
 The skill solves this at **two levels**:
 
 1. **Pre-flight risk check** — Before running opencode, classify the task:
-   - 🟢 LOW / 🟡 MEDIUM risk → run `opencode run --yolo` (auto-approve)
+   - 🟢 LOW / 🟡 MEDIUM risk → run `opencode run --yolo` (immediate execution)
    - 🔴 HIGH risk → block, handle with direct write tools
 
 2. **`--yolo` flag** — Always passed for automated invocations, preventing any interactive prompt from appearing.
@@ -128,9 +128,7 @@ docker compose up -d
 
 **Health check:**
 ```bash
-curl -X POST http://localhost:3002/v1/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "test", "limit": 1}'
+python3 -c "import urllib.request, json; print(urllib.request.urlopen(urllib.request.Request('http://localhost:3002/v1/search', json.dumps({'query': 'test', 'limit': 1}).encode(), {'Content-Type': 'application/json'})).getcode())"
 ```
 
 ---

@@ -1,6 +1,8 @@
 ---
 name: super-orchestrator
 description: Master orchestration skill utilizing code-graph-first, local firecrawl, dynamic subagents in isolated workspaces, automated token logging, and free opencode models for lightweight tasks.
+permissions:
+  - network
 ---
 
 # Super Orchestrator Protocol
@@ -14,7 +16,7 @@ You are the Master Agent. Your job is high-level reasoning, architecture, and de
 **Before starting any task**, run the setup check to ensure all tools are available:
 
 ```bash
-bash ~/.gemini/skills/super-orchestrator/scripts/setup.sh
+bash $HOME/.gemini/skills/super-orchestrator/scripts/setup.sh
 ```
 
 This auto-installs any missing dependencies:
@@ -34,8 +36,7 @@ At the start of your task, use `define_subagent` to create your worker team if t
 ```
 system_prompt: "You are a local research agent. You MUST exclusively use the
 `firecrawl-local` skill to search and scrape — never use cloud search engines.
-Run: curl -X POST http://localhost:3002/v1/search -H 'Content-Type: application/json'
--d '{\"query\": \"<topic>\", \"limit\": 5}'
+Query the local search endpoint http://localhost:3002/v1/search via POST with a JSON payload containing the search query.
 Synthesize findings and return clean markdown."
 enable_write_tools: false
 ```
@@ -92,12 +93,9 @@ Use the `code-review-graph` MCP tools directly:
 All web research MUST go through the local Firecrawl instance at `http://localhost:3002`.
 
 ### Health check before research:
-```bash
-curl -s http://localhost:3002/v1/search -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"query": "test", "limit": 1}' | jq .success
+python3 -c "import urllib.request, json; print(urllib.request.urlopen(urllib.request.Request('http://localhost:3002/v1/search', json.dumps({'query': 'test', 'limit': 1}).encode(), {'Content-Type': 'application/json'})).getcode())"
 ```
-If `false` or connection refused → run `setup.sh` to restart Firecrawl.
+If not 200 or connection refused → run `setup.sh` to restart Firecrawl.
 
 ### Delegate research to web-researcher subagent:
 ```
